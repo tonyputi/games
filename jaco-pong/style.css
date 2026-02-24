@@ -1,0 +1,145 @@
+/* JacoPong - Custom Styles */
+
+/* Prevent mobile browser behaviors */
+html, body {
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
+    touch-action: none;
+}
+
+body {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+/* Canvas crisp rendering */
+#gameCanvas {
+    image-rendering: -moz-crisp-edges;
+    image-rendering: -webkit-crisp-edges;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    touch-action: none;
+}
+
+/* Smooth transitions for UI elements */
+button {
+    transition: all 0.2s ease;
+}
+
+button:active {
+    transform: scale(0.95) !important;
+}
+
+/* Settings modal scrollbar */
+.overflow-y-auto::-webkit-scrollbar {
+    width: 6px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 3px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+}
+
+/* Prevent text selection during gameplay */
+canvas {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    outline: none;
+}
+
+/* File input styling */
+input[type="file"] {
+    display: none;
+}
+
+/* Mobile optimizations */
+@media (max-width: 640px) {
+    /* Larger touch targets on mobile */
+    button {
+        min-height: 48px;
+    }
+
+    /* Adjust font sizes for mobile */
+    h1 {
+        font-size: 2.5rem !important;
+    }
+
+    h2 {
+        font-size: 1.75rem !important;
+    }
+}
+
+/* Landscape mobile */
+@media (max-height: 500px) and (orientation: landscape) {
+    .p-2 {
+        padding: 0.25rem !important;
+    }
+
+    h1 {
+        font-size: 1.5rem !important;
+        margin-bottom: 0.5rem !important;
+    }
+
+    .mb-8 {
+        margin-bottom: 1rem !important;
+    }
+
+    .gap-3 {
+        gap: 0.5rem !important;
+    }
+
+    button {
+        padding: 0.5rem 1rem !important;
+        min-height: 40px;
+    }
+}
+
+/* Prevent pull-to-refresh on mobile */
+@media (pointer: coarse) {
+    html {
+        overscroll-behavior-y: contain;
+    }
+}
+
+/* Animation for score changes */
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.2);
+    }
+}
+
+.score-pulse {
+    animation: pulse 0.3s ease;
+}
+
+/* Glow effect for buttons */
+button:hover {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+}
+
+/* Title text shadow */
+h1 {
+    text-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+/* Loading state */
+.loading {
+    opacity: 0.5;
+    pointer-events: none;
+}

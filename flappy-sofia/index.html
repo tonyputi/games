@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Flappy Sofia</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-sky-400 min-h-screen overflow-hidden touch-none select-none" x-data="gameUI()">
+
+    <!-- Game Container -->
+    <div class="relative w-full h-screen flex items-center justify-center">
+
+        <!-- Canvas -->
+        <canvas id="gameCanvas" class="max-w-full max-h-full"></canvas>
+
+        <!-- Title Screen Overlay -->
+        <div x-show="gameState === 'menu'"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             class="absolute inset-0 flex flex-col items-center justify-center bg-black/30 backdrop-blur-sm">
+
+            <h1 class="text-6xl md:text-8xl font-bold text-white drop-shadow-lg mb-4">
+                Flappy Sofia
+            </h1>
+            <p class="text-white/80 text-lg mb-8">Tap, click o premi spazio per saltare!</p>
+
+            <button @click="startGame()"
+                    class="bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-8 rounded-full text-2xl shadow-lg transform hover:scale-105 transition-all">
+                GIOCA
+            </button>
+
+            <button @click="showSettings = true"
+                    class="mt-4 bg-white/20 hover:bg-white/30 text-white font-semibold py-2 px-6 rounded-full transition-all">
+                ⚙️ Impostazioni
+            </button>
+        </div>
+
+        <!-- Game Over Overlay -->
+        <div x-show="gameState === 'gameover'"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100"
+             class="absolute inset-0 flex flex-col items-center justify-center bg-black/50 backdrop-blur-sm">
+
+            <div class="bg-white rounded-3xl p-8 shadow-2xl text-center max-w-sm mx-4">
+                <h2 class="text-4xl font-bold text-gray-800 mb-4">Game Over!</h2>
+
+                <div class="mb-6">
+                    <p class="text-gray-600">Punteggio</p>
+                    <p class="text-5xl font-bold text-green-500" x-text="score"></p>
+                </div>
+
+                <div class="mb-6">
+                    <p class="text-gray-600">Record</p>
+                    <p class="text-2xl font-bold text-yellow-500" x-text="highScore"></p>
+                </div>
+
+                <button @click="restartGame()"
+                        class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-full text-xl shadow-lg transform hover:scale-105 transition-all">
+                    RIPROVA
+                </button>
+            </div>
+        </div>
+
+        <!-- Score Display (during game) -->
+        <div x-show="gameState === 'playing'" class="absolute top-4 left-1/2 -translate-x-1/2">
+            <p class="text-6xl font-bold text-white drop-shadow-lg" x-text="score"></p>
+        </div>
+
+        <!-- Mute Button -->
+        <button @click="toggleMute()"
+                class="absolute top-4 right-4 bg-white/20 hover:bg-white/30 text-white p-3 rounded-full transition-all">
+            <span x-show="!muted">🔊</span>
+            <span x-show="muted">🔇</span>
+        </button>
+
+        <!-- Settings Modal -->
+        <div x-show="showSettings"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             class="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-50">
+
+            <div @click.outside="showSettings = false"
+                 class="bg-white rounded-3xl p-6 shadow-2xl max-w-md mx-4 w-full max-h-[90vh] overflow-y-auto">
+
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">Impostazioni</h2>
+                    <button @click="showSettings = false" class="text-gray-500 hover:text-gray-700 text-2xl">✕</button>
+                </div>
+
+                <!-- Custom Sprite -->
+                <div class="mb-6">
+                    <h3 class="font-semibold text-gray-700 mb-2">🖼️ Foto Personaggio</h3>
+                    <p class="text-sm text-gray-500 mb-2">Carica una foto per personalizzare il personaggio</p>
+                    <input type="file" accept="image/*" @change="uploadSprite($event)"
+                           class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
+                    <template x-if="customSprite">
+                        <div class="mt-2 flex items-center gap-2">
+                            <img :src="customSprite" class="w-12 h-12 rounded-full object-cover border-2 border-green-500">
+                            <button @click="removeSprite()" class="text-red-500 text-sm hover:underline">Rimuovi</button>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Custom Sounds -->
+                <div class="mb-6">
+                    <h3 class="font-semibold text-gray-700 mb-2">🔊 Suoni Personalizzati</h3>
+
+                    <div class="space-y-3">
+                        <div>
+                            <label class="text-sm text-gray-600">Suono Salto</label>
+                            <div class="flex gap-2">
+                                <input type="file" accept="audio/*" @change="uploadSound('flap', $event)"
+                                       class="block w-full text-xs text-gray-500 file:mr-2 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:bg-blue-50 file:text-blue-700">
+                                <button @click="testSound('flap')" class="text-blue-500 text-sm">▶️</button>
+                                <template x-if="customSounds.flap">
+                                    <button @click="removeSound('flap')" class="text-red-500 text-sm">✕</button>
+                                </template>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="text-sm text-gray-600">Suono Punto</label>
+                            <div class="flex gap-2">
+                                <input type="file" accept="audio/*" @change="uploadSound('score', $event)"
+                                       class="block w-full text-xs text-gray-500 file:mr-2 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:bg-blue-50 file:text-blue-700">
+                                <button @click="testSound('score')" class="text-blue-500 text-sm">▶️</button>
+                                <template x-if="customSounds.score">
+                                    <button @click="removeSound('score')" class="text-red-500 text-sm">✕</button>
+                                </template>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="text-sm text-gray-600">Suono Game Over</label>
+                            <div class="flex gap-2">
+                                <input type="file" accept="audio/*" @change="uploadSound('hit', $event)"
+                                       class="block w-full text-xs text-gray-500 file:mr-2 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:bg-blue-50 file:text-blue-700">
+                                <button @click="testSound('hit')" class="text-blue-500 text-sm">▶️</button>
+                                <template x-if="customSounds.hit">
+                                    <button @click="removeSound('hit')" class="text-red-500 text-sm">✕</button>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reset -->
+                <div class="border-t pt-4">
+                    <button @click="resetAll()"
+                            class="w-full bg-red-100 hover:bg-red-200 text-red-700 font-semibold py-2 px-4 rounded-lg transition-all">
+                        🗑️ Reset Tutto (sprite, suoni, punteggi)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>

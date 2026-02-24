@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <title>JacoPong - Il Pong di Jacopo!</title>
+    <meta name="description" content="JacoPong - Un divertente gioco Pong personalizzato per Jacopo!">
+    <meta name="theme-color" content="#1e40af">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏓</text></svg>">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 min-h-screen overflow-hidden select-none">
+    <div x-data="gameUI()" x-init="init()" class="w-full h-screen flex flex-col items-center justify-center p-2 sm:p-4">
+
+        <!-- Game Container -->
+        <div class="relative w-full max-w-4xl aspect-[4/3] sm:aspect-video">
+            <canvas id="gameCanvas" class="w-full h-full rounded-xl shadow-2xl border-4 border-blue-400/50"></canvas>
+
+            <!-- Menu Overlay -->
+            <div x-show="gameState === 'menu'" x-transition:enter="transition ease-out duration-300"
+                 class="absolute inset-0 flex flex-col items-center justify-center bg-black/60 rounded-xl backdrop-blur-sm">
+                <h1 class="text-4xl sm:text-6xl font-bold text-white mb-2 drop-shadow-lg">
+                    <span class="text-yellow-400">Jaco</span>Pong
+                </h1>
+                <p class="text-blue-200 mb-8 text-sm sm:text-base">Il Pong di Jacopo!</p>
+
+                <div class="flex flex-col gap-3 w-64">
+                    <button @click="startGame('1p')"
+                            class="px-8 py-4 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-400 hover:to-green-500 text-white font-bold rounded-xl text-lg shadow-lg transform hover:scale-105 transition-all">
+                        1 Giocatore vs AI
+                    </button>
+                    <button @click="startGame('2p')"
+                            class="px-8 py-4 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 text-white font-bold rounded-xl text-lg shadow-lg transform hover:scale-105 transition-all">
+                        2 Giocatori
+                    </button>
+                    <button @click="showSettings = true"
+                            class="px-8 py-3 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-500 hover:to-gray-600 text-white font-semibold rounded-xl shadow-lg transform hover:scale-105 transition-all">
+                        Impostazioni
+                    </button>
+                </div>
+
+                <p class="text-blue-300/70 text-xs mt-8">High Score: <span x-text="highScore" class="text-yellow-400 font-bold"></span></p>
+            </div>
+
+            <!-- Playing HUD -->
+            <div x-show="gameState === 'playing'" class="absolute top-4 left-0 right-0 flex justify-center pointer-events-none">
+                <div class="flex items-center gap-8 text-white text-3xl sm:text-5xl font-bold">
+                    <span x-text="score1" class="text-blue-300 drop-shadow-lg"></span>
+                    <span class="text-white/50">-</span>
+                    <span x-text="score2" class="text-red-300 drop-shadow-lg"></span>
+                </div>
+            </div>
+
+            <!-- Pause indicator -->
+            <div x-show="gameState === 'paused'" x-transition
+                 class="absolute inset-0 flex items-center justify-center bg-black/50 rounded-xl backdrop-blur-sm">
+                <div class="text-center">
+                    <p class="text-4xl text-white font-bold mb-4">PAUSA</p>
+                    <p class="text-blue-200 text-sm">Premi SPAZIO o tocca per continuare</p>
+                </div>
+            </div>
+
+            <!-- Game Over Overlay -->
+            <div x-show="gameState === 'gameover'" x-transition:enter="transition ease-out duration-300"
+                 class="absolute inset-0 flex flex-col items-center justify-center bg-black/70 rounded-xl backdrop-blur-sm">
+                <h2 class="text-3xl sm:text-5xl font-bold text-white mb-4">Game Over!</h2>
+                <p class="text-xl sm:text-2xl text-yellow-400 mb-2" x-text="winner"></p>
+                <p class="text-blue-200 mb-8">
+                    <span x-text="score1" class="text-blue-300 font-bold text-2xl"></span>
+                    <span class="mx-2">-</span>
+                    <span x-text="score2" class="text-red-300 font-bold text-2xl"></span>
+                </p>
+
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <button @click="restartGame()"
+                            class="px-8 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-400 hover:to-green-500 text-white font-bold rounded-xl shadow-lg transform hover:scale-105 transition-all">
+                        Gioca Ancora
+                    </button>
+                    <button @click="backToMenu()"
+                            class="px-8 py-3 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-500 hover:to-gray-600 text-white font-semibold rounded-xl shadow-lg transform hover:scale-105 transition-all">
+                        Menu
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Controls Info -->
+        <div x-show="gameState === 'playing' && isMobile" class="absolute bottom-4 left-0 right-0 text-center">
+            <p class="text-blue-300/50 text-xs">Trascina sulla tua metà dello schermo</p>
+        </div>
+
+        <!-- Mute Button -->
+        <button @click="toggleMute()" class="absolute top-4 right-4 p-2 bg-black/30 rounded-full hover:bg-black/50 transition-colors">
+            <svg x-show="!muted" class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/>
+            </svg>
+            <svg x-show="muted" class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"/>
+            </svg>
+        </button>
+
+        <!-- Settings Modal -->
+        <div x-show="showSettings" x-transition:enter="transition ease-out duration-200"
+             class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+             @click.self="showSettings = false">
+            <div class="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-700">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-bold text-white">Impostazioni</h3>
+                    <button @click="showSettings = false" class="text-gray-400 hover:text-white transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Difficulty -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Difficoltà AI</label>
+                    <select x-model="difficulty" @change="updateDifficulty()"
+                            class="w-full bg-gray-700 text-white rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        <option value="easy">Facile</option>
+                        <option value="medium">Medio</option>
+                        <option value="hard">Difficile</option>
+                        <option value="impossible">Impossibile</option>
+                    </select>
+                </div>
+
+                <!-- Winning Score -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Punteggio per vincere</label>
+                    <select x-model="winningScore" @change="updateWinningScore()"
+                            class="w-full bg-gray-700 text-white rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        <option value="5">5 punti</option>
+                        <option value="10">10 punti</option>
+                        <option value="15">15 punti</option>
+                        <option value="21">21 punti</option>
+                    </select>
+                </div>
+
+                <!-- Ball Image -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Immagine Pallina (faccia di Jacopo)</label>
+                    <div class="flex items-center gap-4">
+                        <div class="w-16 h-16 rounded-full bg-gray-700 overflow-hidden flex items-center justify-center border-2 border-blue-400">
+                            <img x-show="customBallImage" :src="customBallImage" class="w-full h-full object-cover">
+                            <span x-show="!customBallImage" class="text-3xl">😊</span>
+                        </div>
+                        <div class="flex-1">
+                            <input type="file" accept="image/*" @change="handleBallImage($event)"
+                                   class="hidden" id="ballImageInput">
+                            <label for="ballImageInput"
+                                   class="block w-full px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-center rounded-lg cursor-pointer transition-colors">
+                                Carica Foto
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hit Sound -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Suono Colpo (ouch!)</label>
+                    <div class="flex items-center gap-2">
+                        <input type="file" accept="audio/*" @change="handleHitSound($event)"
+                               class="hidden" id="hitSoundInput">
+                        <label for="hitSoundInput"
+                               class="flex-1 px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-center rounded-lg cursor-pointer transition-colors">
+                            Carica Suono
+                        </label>
+                        <button @click="testHitSound()" class="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg transition-colors">
+                            Test
+                        </button>
+                    </div>
+                    <p x-show="customHitSound" class="text-green-400 text-xs mt-1">Suono personalizzato caricato!</p>
+                </div>
+
+                <!-- Score Sound -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Suono Punto</label>
+                    <div class="flex items-center gap-2">
+                        <input type="file" accept="audio/*" @change="handleScoreSound($event)"
+                               class="hidden" id="scoreSoundInput">
+                        <label for="scoreSoundInput"
+                               class="flex-1 px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-center rounded-lg cursor-pointer transition-colors">
+                            Carica Suono
+                        </label>
+                        <button @click="testScoreSound()" class="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg transition-colors">
+                            Test
+                        </button>
+                    </div>
+                    <p x-show="customScoreSound" class="text-green-400 text-xs mt-1">Suono personalizzato caricato!</p>
+                </div>
+
+                <!-- Reset -->
+                <button @click="resetSettings()"
+                        class="w-full px-4 py-2 bg-red-600/50 hover:bg-red-600 text-white rounded-lg transition-colors">
+                    Ripristina Impostazioni
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
