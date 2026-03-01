@@ -55,12 +55,20 @@
             background: radial-gradient(ellipse at 50% 0%, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
         }
 
+        .card-lavirinto::before {
+            background: radial-gradient(ellipse at 50% 0%, rgba(16, 185, 129, 0.15) 0%, transparent 70%);
+        }
+
         .card-flappy:hover {
             box-shadow: 0 20px 60px rgba(56, 189, 248, 0.25), 0 0 0 1px rgba(56, 189, 248, 0.3);
         }
 
         .card-pong:hover {
             box-shadow: 0 20px 60px rgba(99, 102, 241, 0.25), 0 0 0 1px rgba(99, 102, 241, 0.3);
+        }
+
+        .card-lavirinto:hover {
+            box-shadow: 0 20px 60px rgba(16, 185, 129, 0.25), 0 0 0 1px rgba(16, 185, 129, 0.3);
         }
 
         .pixel-preview {
@@ -134,7 +142,7 @@
         </header>
 
         <!-- Games Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 lg:gap-8">
 
             <!-- Flappy Sofia -->
             <a href="/flappy-sofia/" class="game-card card-flappy block rounded-2xl bg-white/5 border border-white/10 p-6 sm:p-8 no-underline group">
@@ -191,6 +199,36 @@
                 </div>
 
                 <div class="play-btn inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm px-6 py-3 rounded-xl" style="font-family: Inter, sans-serif;">
+                    <span>▶</span>
+                    <span>GIOCA ORA</span>
+                </div>
+            </a>
+
+            <!-- LaviRinto -->
+            <a href="/lavi-rinto/" class="game-card card-lavirinto block rounded-2xl bg-white/5 border border-white/10 p-6 sm:p-8 no-underline group">
+
+                <div class="flex items-start justify-between mb-6">
+                    <div class="pixel-preview float-icon">🌸</div>
+                    <span class="badge bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-3 py-1.5 rounded-full">
+                        SINGLE PLAYER
+                    </span>
+                </div>
+
+                <h2 class="text-xl sm:text-2xl font-bold text-white mb-2" style="font-family: Inter, sans-serif;">
+                    LaviRinto
+                </h2>
+                <p class="text-gray-400 text-sm leading-relaxed mb-6" style="font-family: Inter, sans-serif;">
+                    Il labirinto personalizzato di Laviania! Esplora il giardino del nonno, raccogli i fiori evitando Jacopo e Sofia.
+                </p>
+
+                <div class="flex flex-wrap gap-2 mb-8">
+                    <span class="text-xs text-emerald-400/70 bg-emerald-400/10 border border-emerald-400/20 rounded-md px-2 py-1">⌨️ Frecce / WASD</span>
+                    <span class="text-xs text-emerald-400/70 bg-emerald-400/10 border border-emerald-400/20 rounded-md px-2 py-1">☝️ Swipe</span>
+                    <span class="text-xs text-emerald-400/70 bg-emerald-400/10 border border-emerald-400/20 rounded-md px-2 py-1">📸 3 Personaggi</span>
+                    <span class="text-xs text-emerald-400/70 bg-emerald-400/10 border border-emerald-400/20 rounded-md px-2 py-1">🗺️ Mappa Custom</span>
+                </div>
+
+                <div class="play-btn inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm px-6 py-3 rounded-xl" style="font-family: Inter, sans-serif;">
                     <span>▶</span>
                     <span>GIOCA ORA</span>
                 </div>
