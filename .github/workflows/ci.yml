@@ -1,0 +1,22 @@
+name: CI
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build and syntax
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: lavi-rinto/package-lock.json
+      - run: node --check flappy-sofia/game.js && node --check jaco-pong/game.js
+      - run: npm ci && npm run build
+        working-directory: lavi-rinto
