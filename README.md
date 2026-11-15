@@ -1,6 +1,6 @@
 # Games
 
-PR CI checks the standalone JavaScript syntax and builds Lavi Rinto.
+PR CI checks the standalone JavaScript syntax and builds Lavi Rinto. Dependabot monitors GitHub Actions and the Lavi Rinto npm dependencies.
 
 ## Dependabot automation
 
